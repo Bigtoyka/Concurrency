@@ -1,27 +1,35 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class Main {
     public static void main(String[] args) {
-        Bankomat bankomat = new Bankomat(10);
-        Thread client1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                bankomat.getSize("Bob", 2);
-            }
-        });
-        Thread client2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                bankomat.getSize("Karolina", 3);
-            }
-        });
-        Thread client3 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                bankomat.getSize("Daria", 10);
-            }
-        });
-        client1.start();
-        client2.start();
-        client3.start();
-
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        CountDownLatch countDownLatch = new CountDownLatch(10);
+        for (int i = 0; i < 10; i++) {
+            final int index = i;
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("Start " + index);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("Finish " + index);
+                    countDownLatch.countDown();
+                }
+            });
+        }
+        executorService.shutdown();
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Все потоки завершили работу");
     }
 }
