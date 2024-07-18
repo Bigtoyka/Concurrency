@@ -1,35 +1,39 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public class Main {
     public static void main(String[] args) {
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
-        CountDownLatch countDownLatch = new CountDownLatch(10);
+        BlockingQueue blockingQueue = new BlockingQueue();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int i = 0;
+                while (true) {
+                    System.out.println("Counter" + i);
+                    i++;
+                    Runnable task = blockingQueue.take();
+                    if (task != null) {
+                        new Thread(task).start();
+                    }
+                }
+            }
+        }).start();
         for (int i = 0; i < 10; i++) {
             final int index = i;
-            executorService.execute(new Runnable() {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            blockingQueue.add(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("Start " + index);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                    System.out.println("Finish " + index);
-                    countDownLatch.countDown();
+                    System.out.println("---" + index);
                 }
             });
         }
-        executorService.shutdown();
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Все потоки завершили работу");
     }
+
 }
