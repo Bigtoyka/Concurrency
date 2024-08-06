@@ -1,49 +1,40 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.*;
 
 public class Main {
     public static void main(String[] args) {
-        List<Integer> numbers = new CopyOnWriteArrayList<>();
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < 100; i++) {
-                        Thread.sleep(100);
-                        numbers.add(i);
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(2);
+        for (int i = 0; i < 10; i++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    long millis = (long) (Math.random() * 5000 + 1000);
+                    String name = Thread.currentThread().getName();
+                    System.out.println(name + ": Data is being prepared");
+                    try {
+                        Thread.sleep(millis);
+                        System.out.println(name + ": Data is ready");
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).start();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < 100; i++) {
-                        Thread.sleep(100);
-                        numbers.add(i);
+                    try {
+                        cyclicBarrier.await();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    System.out.println(name + " Continue work");
                 }
-            }
-        }).start();
+            }).start();
+        }
+    }
+
+    private static void workWithFileSystem() {
+        String name = Thread.currentThread().getName();
+        System.out.println(name + " started working with file system");
         try {
-            countDownLatch.await();
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(numbers.size());
-        for(int number : numbers) {
-            System.out.println(number);
-        }
+        System.out.println(name + " finished working with file system");
     }
 }
