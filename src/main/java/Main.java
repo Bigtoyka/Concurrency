@@ -9,7 +9,7 @@ public class Main {
                 public void run() {
                     long millis = (long) (Math.random() * 5000 + 1000);
                     String name = Thread.currentThread().getName();
-                    System.out.println(name + ": Data is being prepared");
+                    System.out.println(name.substring(name.length() -1 ) + ": Data is being prepared");
                     try {
                         Thread.sleep(millis);
                         System.out.println(name + ": Data is ready");
